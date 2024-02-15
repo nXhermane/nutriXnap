@@ -93,7 +93,7 @@ const Button = (props: ButtonProps) => {
         },
         title: {
             fontFamily: ff,
-            fontSize: fs, 
+            fontSize: fs,
             textTransform: upper ? "uppercase" : "none",
             color: !outlined
                 ? fc || Colors.light.white
@@ -129,7 +129,9 @@ const Button = (props: ButtonProps) => {
                     </View>
                 )}
                 <View style={styles.titleContainer}>
-                    <Text  numberOfLines={1} style={styles.title}>{label || "Button"}</Text>
+                    <Text numberOfLines={1} style={styles.title}>
+                        {label || "Button"}
+                    </Text>
                 </View>
                 {iconEnd && (
                     <View style={[styles.icon]}>

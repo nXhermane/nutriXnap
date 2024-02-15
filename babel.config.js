@@ -7,18 +7,7 @@ module.exports = function (api) {
         ],
         plugins: [
             "@babel/plugin-proposal-export-namespace-from",
-
-          [
-                "react-native-reanimated/plugin",
-                {
-                    relativeSourceLocation: true,
-                    disableInlineStylesWarning: true,
-                    processNestedWorklets: true,
-                    omitNativeOnlyData: true,
-                    globals: ["myObjectOnUI"],
-                    substituteWebPlatformChecks: true
-                }
-            ]
+            "react-native-reanimated/plugin"
         ]
     };
 };

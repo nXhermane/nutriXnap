@@ -1,4 +1,3 @@
-import React from "react-native-gesture-handler";
 import "react-native-gesture-handler";
 
 import FontAwesome from "@expo/vector-icons/FontAwesome";

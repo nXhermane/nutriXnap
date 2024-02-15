@@ -1,95 +1,115 @@
 import React from "react";
-import {
-    View,
-    Text,
-    StyleSheet,
-    Platform,
-    Image,
-    Animated,
-    Easing
-} from "react-native";
+import { View, Text, StyleSheet, Platform, Image, Button } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
 import Colors from "@/constants/Colors";
-import SIZES from "@/constants/Sizes"
+import SIZES from "@/constants/Sizes";
 import Logo from "./../components/Logo";
 import Background from "./../components/Background";
+import Animated, {
+    withSpring,
+    withTiming,
+    withDelay,
+    useAnimatedProps,
+    useAnimatedStyle,
+    useSharedValue,
+    interpolate,
+    runOnJS
+} from "react-native-reanimated";
 const App = () => {
-    const size = React.useRef(new Animated.Value(0)).current;
-    const opacity = React.useRef(new Animated.Value(0)).current;
-    const [Size, setSize] = React.useState(0);
-    const LogoName = "nutriXnap".split("");
+    const logoSize = useSharedValue(SIZES.s100 + SIZES.s50);
+    const logoTransForm = useSharedValue(0);
+    const LogoAnimatedStyle = useAnimatedStyle(() => ({
+        height: logoSize.value,
+        width: logoSize.value,
+        transform: [
+            {
+                translateX: interpolate(
+                    logoTransForm.value,
+                    [0, 1],
+                    [0, -SIZES.s50]
+                )
+            }
+        ]
+    }));
+    const SeparatorAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [
+            {
+                translateX: interpolate(
+                    logoTransForm.value,
+                    [0, 1],
+                    [0, -(SIZES.s50 + SIZES.s5)]
+                )
+            }
+        ],
+        opacity: interpolate(logoTransForm.value, [0, 0.8, 1], [0, 0.5, 1])
+    }));
+    const TextAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [
+            {
+                translateX: interpolate(
+                    logoTransForm.value,
+                    [0, 1],
+                    [-(SIZES.s100 + SIZES.s50), SIZES.s5]
+                )
+            }
+        ],
+        opacity: interpolate(
+            logoTransForm.value,
+            [0, 0.4, 0.6, 0.8, 1],
+            [0, 0, 0, 0, 1]
+        )
+    }));
 
-    size.addListener(({ value }) => {
-        setSize(value * (SIZES.s100+SIZES.s50));
-    });
     const animation = () => {
-        Animated.sequence([
-            Animated.spring(opacity, {
-                toValue: 1,
-                duration: 200,
-                easing: Easing.inOut(Easing.linear),
-                useNativeDriver: true
-            }),
-            Animated.spring(size, {
-                toValue: 1,
-                duration: 200,
-                mass: 3,
-                easing: Easing.inOut(Easing.linear),
-                useNativeDriver: true
-            })
-        ]).start(({ finished }) => {
-            if (finished) router.replace("/auth");
-        });
+        logoSize.value = withDelay(
+            1000,
+            withSpring(
+                SIZES.s50 + SIZES.s1,
+                { duration: 100 },
+                (finished, value) => {
+                    if (finished === true) {
+                        logoTransForm.value = withTiming(
+                            1,
+                            { duration: 1000 },
+                            finished => {
+                                logoTransForm.value = withDelay(
+                                    500,
+                                    withTiming(
+                                        0,
+                                        { duration: 1000 },
+                                        finished => {
+                                            if (finished)
+                                                runOnJS(router.replace)(
+                                                    "./auth"
+                                                );
+                                        }
+                                    )
+                                );
+                            }
+                        );
+                    }
+                }
+            )
+        );
     };
     React.useEffect(() => {
-        animation()
-        // setTimeout(() => {
-        //   router.replace("/auth");
-        // }, 200);
+        animation();
+        
     });
     return (
-        <Background>
-            <View style={styles.container}>
-                <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
-                <Logo
-                    size={Size}
-                    style={{
-                        transform: [
-                            {
-                                translateY: size.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [0, - SIZES.s50]
-                                })
-                            }
-                        ],
-                        opacity: size.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0, 1]
-                        })
-                    }}
+        <View style={styles.container}>
+            <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
+            <View style={styles.animationContainer}>
+                <Logo style={LogoAnimatedStyle} />
+                <Animated.View
+                    style={[styles.separator, SeparatorAnimatedStyle]}
                 />
-                <Animated.Text
-                    style={{
-                        ...styles.text,
-                        opacity: opacity.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0, 1]
-                        }),
-                        transform: [
-                            {
-                                translateY: opacity.interpolate({
-                                    inputRange: [0, 0.5, 1],
-                                    outputRange: [SIZES.s100*2, 0, - SIZES.s50]
-                                })
-                            }
-                        ]
-                    }}
-                >
-                    {LogoName.map(i => i)}
+                <Animated.Text style={[styles.text, TextAnimatedStyle]}>
+                    nutriXnap
                 </Animated.Text>
             </View>
-        </Background>
+        </View>
     );
 };
 
@@ -98,14 +118,30 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         flex: 1,
-        backgroundColor: Colors.light.white_primary + "00",
-      minHeight:SIZES.height,
-    
+        backgroundColor: Colors.light.primary,
+        minHeight: SIZES.height
+    },
+    animationContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        width: (SIZES.width * 1.5) / 2,
+        flexDirection: "row"
     },
     text: {
         color: Colors.light.accent,
         fontFamily: "great",
-        fontSize: SIZES.s50+SIZES.s5
+        fontSize: SIZES.s50,
+        position: "absolute",
+        opacity: 0
+    },
+    separator: {
+        width: SIZES.s1 / 2,
+        height: SIZES.s50 - SIZES.s2,
+        backgroundColor: Colors.light.secondary,
+        borderRadius: SIZES.s5,
+        position: "absolute",
+        opacity: 0
     }
 });
 
